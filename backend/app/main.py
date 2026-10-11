@@ -3,19 +3,37 @@ CyberSaathi FastAPI Application Entry Point.
 Production-ready web service for community cyber safety assessment.
 """
 
+import sys
+import os
 import logging
 import datetime
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from backend.app.core.config import settings
-from backend.app.core.security import SecurityHeadersMiddleware
-from backend.app.ml.classifier import classifier
-from backend.app.schemas.analysis import HealthResponse, ReadyResponse
-from backend.app.api.endpoints import router as api_router
+# Ensure both repository root and backend directory are in sys.path
+_CURRENT_DIR = Path(__file__).resolve().parent
+_BACKEND_DIR = _CURRENT_DIR.parent
+_REPO_ROOT = _BACKEND_DIR.parent
+for _p in [str(_REPO_ROOT), str(_BACKEND_DIR), str(_CURRENT_DIR)]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+try:
+    from backend.app.core.config import settings
+    from backend.app.core.security import SecurityHeadersMiddleware
+    from backend.app.ml.classifier import classifier
+    from backend.app.schemas.analysis import HealthResponse, ReadyResponse
+    from backend.app.api.endpoints import router as api_router
+except ModuleNotFoundError:
+    from app.core.config import settings
+    from app.core.security import SecurityHeadersMiddleware
+    from app.ml.classifier import classifier
+    from app.schemas.analysis import HealthResponse, ReadyResponse
+    from app.api.endpoints import router as api_router
 
 # Configure structured logging
 logging.basicConfig(
@@ -33,6 +51,24 @@ async def lifespan(app: FastAPI):
         logger.info(f"CyberSaathi ML classifier initialized successfully ({classifier.version}).")
     else:
         logger.warning("ML model could not be loaded from disk. Operating in heuristic rule fallback mode.")
+
+    # Diagnostic: Log all registered route paths at startup
+    logger.info("=== CYBERSAATHI REGISTERED ROUTES AT STARTUP ===")
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            logger.info(f"  [ROUTE] {route.methods} {route.path}")
+        elif hasattr(route, "original_router"):
+            prefix = getattr(getattr(route, "include_context", None), "prefix", "")
+            for sub_r in getattr(route.original_router, "routes", []):
+                methods = getattr(sub_r, "methods", None)
+                sub_path = prefix + getattr(sub_r, "path", "")
+                logger.info(f"  [ROUTE] {methods} {sub_path}")
+        elif hasattr(route, "routes"):
+            for sub_r in getattr(route, "routes", []):
+                logger.info(f"  [SUB-ROUTE] {getattr(sub_r, 'methods', None)} {getattr(sub_r, 'path', sub_r)}")
+        else:
+            logger.info(f"  [MOUNT] {getattr(route, 'path_format', route)}")
+
     yield
     logger.info("Shutting down CyberSaathi service.")
 
@@ -100,13 +136,14 @@ async def root():
         "ready": "/ready"
     }
 
-# Liveness Probe (root path /health)
+# Liveness Probe (root path /health and /health/)
 @app.get("/health", response_model=HealthResponse, tags=["Status"])
+@app.get("/health/", response_model=HealthResponse, include_in_schema=False)
 async def health_check():
     """Liveness probe returning {"status": "ok"}."""
     return {"status": "ok"}
 
-# Readiness Probe (root path /ready)
+# Readiness Probe (root path /ready and /ready/)
 @app.get(
     "/ready",
     response_model=ReadyResponse,
@@ -116,6 +153,7 @@ async def health_check():
     },
     tags=["Status"]
 )
+@app.get("/ready/", response_model=ReadyResponse, include_in_schema=False)
 async def readiness_check():
     """Readiness probe returning 200 only when ML classifier is loaded, otherwise 503."""
     if classifier.is_loaded:
@@ -138,3 +176,8 @@ async def readiness_check():
 
 # Mount versioned API routes
 app.include_router(api_router, prefix="/api/v1", tags=["Safety Assessment"])
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", settings.PORT))
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=port, reload=False)

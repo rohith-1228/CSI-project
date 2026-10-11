@@ -17,6 +17,12 @@ def test_health_endpoint_root():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+def test_health_endpoint_trailing_slash():
+    """GET /health/ with trailing slash returns {"status": "ok"}."""
+    response = client.get("/health/")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
 def test_health_endpoint_api_prefix():
     """GET /api/v1/health also returns {"status": "ok"}."""
     response = client.get("/api/v1/health")
@@ -35,6 +41,17 @@ def test_ready_endpoint_success_when_loaded():
     assert data["status"] == "ready"
     assert data["model_loaded"] is True
     assert "model_version" in data
+
+    # Test trailing slash /ready/
+    resp_slash = client.get("/ready/")
+    assert resp_slash.status_code == 200
+    assert resp_slash.json()["status"] == "ready"
+
+def test_root_main_proxy_app():
+    """Verify root main.py exports the exact same production FastAPI app instance."""
+    from main import app as root_app
+    from backend.app.main import app as backend_app
+    assert root_app is backend_app
 
 def test_ready_endpoint_503_when_not_loaded():
     """Requirement 4: GET /ready returns 503 when ML classifier is not loaded."""
