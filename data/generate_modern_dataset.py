@@ -1,0 +1,94 @@
+"""Script to generate documented modern community cyber fraud & safety examples."""
+import json
+import os
+
+MODERN_DATASET = [
+    # 1. Electricity & Utility scams
+    {"label": "spam", "category": "utility_scam", "text": "Dear consumer your electricity power will be disconnected tonight at 9:30 PM from electricity office because your previous month bill was not updated. Please immediately contact our electricity officer Rahul Sharma at 9876543210."},
+    {"label": "spam", "category": "utility_scam", "text": "URGENT NOTICE: Power supply to your connection 839201 will be disconnected today at 10 PM. To avoid disconnection, call power department executive at 8829103948."},
+    {"label": "spam", "category": "utility_scam", "text": "Electricity bill alert: Your connection has unpaid dues of Rs 1,480. Pay within 2 hours or power line will be severed. Call Bijli Nigam officer immediately on 7901234567."},
+    {"label": "spam", "category": "utility_scam", "text": "Dear customer, your gas connection will be disconnected by evening due to KYC pending. Call HP Gas executive on 9123456780 to update."},
+    {"label": "spam", "category": "utility_scam", "text": "Water board alert: Your water supply line is scheduled for suspension. Clear pending surcharge immediately. Contact 9312049182."},
+
+    # 2. Bank KYC & Account Block scams
+    {"label": "spam", "category": "kyc_phishing", "text": "Dear customer, your SBI NetBanking account has been blocked today due to pending KYC verification. Please click http://sbi-kyc-update.xyz to update PAN and unblock."},
+    {"label": "spam", "category": "kyc_phishing", "text": "HDFC Bank Alert: Your debit card is deactivated due to expired KYC documents. Update now at http://hdfc-card-verify.top or your account will be permanently closed."},
+    {"label": "spam", "category": "kyc_phishing", "text": "ICICI Alert: Your bank account will be suspended within 24 hours. Submit your Aadhaar card and PAN number immediately on http://icici-portal-kyc.com/login"},
+    {"label": "spam", "category": "kyc_phishing", "text": "Dear User, your PNB bank account has been put on hold. Download the quick support app and share your 9 digit code to verify your identity."},
+    {"label": "spam", "category": "kyc_phishing", "text": "Kotak Bank: Important! Your bank balance is frozen. Please verify your mobile number and net banking password at http://kotak-netverify.info"},
+    {"label": "spam", "category": "kyc_phishing", "text": "Dear Bank Customer, your account has been flagged for suspicious activity. Click http://192.168.1.55/bank-security to confirm your login details immediately."},
+    {"label": "spam", "category": "kyc_phishing", "text": "Axis Bank: Your credit card reward points worth Rs 9,850 are expiring today! Redeem cash into your savings account at http://axis-rewards-cash.xyz"},
+
+    # 3. OTP & Credential theft
+    {"label": "spam", "category": "otp_theft", "text": "Bank alert: An unauthorized debit of Rs 50,000 is initiated on your account. To cancel this payment, immediately call 9876543210 and share the cancellation OTP."},
+    {"label": "spam", "category": "otp_theft", "text": "Dear user, someone is trying to access your WhatsApp account from another device. To secure your account, send your 6-digit verification code to our support agent."},
+    {"label": "spam", "category": "otp_theft", "text": "Your Google account password was changed. If this was not you, reply with the OTP sent to your mobile phone right away."},
+    {"label": "spam", "category": "otp_theft", "text": "Paytm Security: Suspicious login from Delhi detected. Please enter your UPI PIN and OTP on http://paytm-security-check.com to protect your balance."},
+    {"label": "spam", "category": "otp_theft", "text": "Income Tax Department: Your tax refund of Rs 18,500 has been approved. Enter your bank account number and netbanking password at http://incometax-refunds.xyz to credit."},
+
+    # 4. UPI & Payment Cashback scams
+    {"label": "spam", "category": "upi_cashback", "text": "Congratulations! You have received a cashback reward of Rs 2,999 in PhonePe. Click http://cashback-reward-phonepe.xyz/claim and enter your UPI PIN to receive money."},
+    {"label": "spam", "category": "upi_cashback", "text": "GooglePay gift: You won Rs 4,500 festive bonus! Accept payment now: http://gpay-festive-bonus.link and send payment request."},
+    {"label": "spam", "category": "upi_cashback", "text": "Dear Customer, Rs 1,500 credited to your wallet. Click to accept and approve in your UPI app: http://bit.ly/claim-wallet-cash"},
+    {"label": "spam", "category": "upi_cashback", "text": "Congratulations! Your Paytm cashback of Rs 3,450 is ready. Open link and enter PIN to transfer directly into your account."},
+
+    # 5. Malicious APK distribution
+    {"label": "spam", "category": "apk_malware", "text": "Government scheme alert: Under PM Kisan Yojna, all citizens get Rs 5,000 monthly subsidy. Install PM_Kisan_Yojna.apk from http://pm-subsidy-scheme.top/app.apk"},
+    {"label": "spam", "category": "apk_malware", "text": "Free 5G mobile data for all Jio and Airtel users for 1 year! Download and install 5G_Speed_Booster.apk from http://free-5g-upgrade.buzz"},
+    {"label": "spam", "category": "apk_malware", "text": "Watch all latest movies and live IPL cricket for free! Download our app right now: http://cricket-live-stream.xyz/live.apk"},
+    {"label": "spam", "category": "apk_malware", "text": "Update your WhatsApp to WhatsApp Pink with new themes and video features. Download APK here: http://whatsapp-pink-download.site/app.apk"},
+
+    # 6. Courier / Delivery Phishing
+    {"label": "spam", "category": "courier_phishing", "text": "India Post: Your package IND93821 cannot be delivered due to incomplete house address. Please update your details and pay Rs 25 redelivery fee at http://indiapost-parcel-update.top"},
+    {"label": "spam", "category": "courier_phishing", "text": "BlueDart delivery alert: Your parcel delivery failed because recipient was absent. Reschedule your delivery within 24h at http://bluedart-redeliver.xyz"},
+    {"label": "spam", "category": "courier_phishing", "text": "DTDC Courier: Urgent delivery notification. Your shipment is pending customs clearance. Pay Rs 49 verification fee: http://dtdc-customs.link"},
+
+    # 7. Job / Work From Home Task Fraud
+    {"label": "spam", "category": "task_fraud", "text": "Part time job offer: Earn Rs 3,000 to Rs 8,000 daily from home just by liking YouTube videos and rating hotels on Google. No investment needed. Contact HR manager on Telegram @EarnDaily_HR"},
+    {"label": "spam", "category": "task_fraud", "text": "Amazon hiring online assistants. Flexible working hours 1-2 hours per day, daily payout Rs 2,500 via UPI. WhatsApp your resume to 9812304918 now."},
+    {"label": "spam", "category": "task_fraud", "text": "Hello, I am recruiting manager from Flipkart. We have remote vacancies with salary Rs 45,000 per month. Join our official Telegram channel http://t.me/flipkart_career_official"},
+
+    # 8. Lottery & KBC scams
+    {"label": "spam", "category": "lottery_scam", "text": "Dear customer, your mobile number has won 25,00,000 (Twenty Five Lakhs) in KBC Kaun Banega Crorepati WhatsApp Lucky Draw! Contact KBC officer Rana Pratap Singh on WhatsApp 8923019283."},
+    {"label": "spam", "category": "lottery_scam", "text": "Congratulations! You are the 1st prize winner of Mercedes Benz car or cash equivalent 40 Lakhs in Coca Cola international anniversary draw. Call manager to claim."},
+
+    # 9. Fake loan scams
+    {"label": "spam", "category": "fake_loan", "text": "Instant personal loan of Rs 5,00,000 approved without any income proof or CIBIL check. Zero processing fee. Amount will be credited in 10 minutes. Apply at http://instant-loan-dhan.xyz"},
+    {"label": "spam", "category": "fake_loan", "text": "Urgent Cash Need? Get up to Rs 2 Lakh instant loan on your Aadhaar card with 0% interest for first 3 months. Click http://dhanlaxmi-loans.top"},
+
+    # --- Genuine Community / Legitimate Messages (ham) ---
+    {"label": "ham", "category": "utility_receipt", "text": "Dear consumer, payment of Rs 1,420 for electricity CA no 10029384 has been successfully received on 11-Oct-2024 via NetBanking. Receipt no: REC48291. Thank you, BSES."},
+    {"label": "ham", "category": "utility_receipt", "text": "Your Indane gas refill booking ref 8392019 is confirmed. Cylinder will be delivered in 2-3 working days. Cash to pay Rs 850 at time of delivery."},
+    {"label": "ham", "category": "utility_receipt", "text": "Payment received: INR 799 for your Airtel broadband account 011-48291048. Transaction ID: TXN938201. Services active."},
+
+    {"label": "ham", "category": "bank_transaction", "text": "Your A/C ending XX4921 has been debited with INR 250.00 on 10-Oct-2024 14:22 via UPI. Ref No: 42918491829. Available balance is INR 14,210.00. - HDFC Bank"},
+    {"label": "ham", "category": "bank_transaction", "text": "INR 5,000.00 credited to your SBI account XX1029 on 09-Oct-2024 by transfer from Ramesh Kumar. Updated balance: INR 28,400.00."},
+    {"label": "ham", "category": "bank_transaction", "text": "Dear Customer, your monthly bank statement for account ending 8492 for the month of September is generated and sent to your registered email address."},
+
+    {"label": "ham", "category": "otp_legitimate", "text": "382941 is your one time password (OTP) for logging into your Swiggy account. Valid for 5 minutes. Do not share this OTP with anyone, including Swiggy delivery executives."},
+    {"label": "ham", "category": "otp_legitimate", "text": "Use OTP 948102 to verify your Aadhaar authentication for DigiLocker. Valid for 10 minutes. UIDAI never calls to ask for OTP."},
+    {"label": "ham", "category": "otp_legitimate", "text": "Your login verification code for Amazon is 719284. Don't share this code with anyone."},
+
+    {"label": "ham", "category": "courier_legitimate", "text": "Your Amazon order 402-9182049-182910 is out for delivery today. Delivery agent will arrive between 2 PM and 6 PM. Hand over OTP 4821 to delivery partner."},
+    {"label": "ham", "category": "courier_legitimate", "text": "Shipment from Myntra with tracking number BDL8392019 has arrived at your local delivery center. Expected delivery by tomorrow."},
+
+    {"label": "ham", "category": "appointment_and_services", "text": "Dear patient, your appointment with Dr. Sharma at Apollo Clinic is confirmed for tomorrow at 4:30 PM. Please arrive 10 minutes prior to your slot."},
+    {"label": "ham", "category": "appointment_and_services", "text": "Your car service booking for Honda City is scheduled on Saturday 10:00 AM at Ring Road Service Station. Service advisor: Mukesh."},
+    {"label": "ham", "category": "appointment_and_services", "text": "School reminder: Parent-Teacher meeting for Class 7-B is scheduled on 14th October from 9:00 AM to 12:00 PM. All parents are requested to attend."},
+
+    {"label": "ham", "category": "casual_chat", "text": "Hey, are we still meeting for coffee this evening? Let me know once you finish your work."},
+    {"label": "ham", "category": "casual_chat", "text": "Hi Mom, I have reached the hostel safely. Will call you after dinner."},
+    {"label": "ham", "category": "casual_chat", "text": "Please bring the chemistry notebook tomorrow to college, I need to copy the practical experiment."},
+    {"label": "ham", "category": "casual_chat", "text": "Happy birthday Rohit! Wishing you a wonderful year ahead filled with happiness and good health."},
+    {"label": "ham", "category": "casual_chat", "text": "Can you please send me the recipe for the paneer curry you made yesterday? It was delicious."}
+]
+
+def main():
+    os.makedirs("data", exist_ok=True)
+    out_file = "data/modern_community_scams.json"
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(MODERN_DATASET, f, indent=2)
+    print(f"Saved {len(MODERN_DATASET)} modern community scam/ham examples to {out_file}")
+
+if __name__ == "__main__":
+    main()
