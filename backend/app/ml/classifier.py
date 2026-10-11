@@ -19,20 +19,39 @@ class ScamClassifier:
         self.metadata = {}
         self._is_loaded = False
 
+    def _resolve_path(self, path: str) -> str:
+        """Finds artifact path across project root and working directory variations."""
+        if os.path.exists(path):
+            return path
+        # Try relative to repo root
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        candidate = os.path.join(repo_root, path)
+        if os.path.exists(candidate):
+            return candidate
+        # Try relative to backend dir
+        backend_rel = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", path))
+        if os.path.exists(backend_rel):
+            return backend_rel
+        return path
+
     def load(self) -> bool:
         """Loads model pipeline and metadata from disk."""
         try:
-            if not os.path.exists(self.model_path):
-                logger.warning(f"Model artifact not found at {self.model_path}. Fallback rule engine will be used.")
+            resolved_model = self._resolve_path(self.model_path)
+            resolved_meta = self._resolve_path(self.metadata_path)
+
+            if not os.path.exists(resolved_model):
+                logger.warning(f"Model artifact not found at {self.model_path} (resolved: {resolved_model}). Fallback rule engine will be used.")
                 self._is_loaded = False
+                self.pipeline = None
                 return False
 
-            self.pipeline = joblib.load(self.model_path)
+            self.pipeline = joblib.load(resolved_model)
             self._is_loaded = True
-            logger.info(f"Loaded ML model successfully from {self.model_path}")
+            logger.info(f"Loaded ML model successfully from {resolved_model}")
 
-            if os.path.exists(self.metadata_path):
-                with open(self.metadata_path, "r", encoding="utf-8") as f:
+            if os.path.exists(resolved_meta):
+                with open(resolved_meta, "r", encoding="utf-8") as f:
                     self.metadata = json.load(f)
                 logger.info(f"Loaded model metadata version {self.metadata.get('model_version')}")
             else:

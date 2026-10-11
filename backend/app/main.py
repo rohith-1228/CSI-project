@@ -100,25 +100,40 @@ async def root():
         "ready": "/ready"
     }
 
-# Liveness Probe
+# Liveness Probe (root path /health)
 @app.get("/health", response_model=HealthResponse, tags=["Status"])
-async def health_check() -> HealthResponse:
-    return HealthResponse(
-        status="healthy",
-        timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        environment=settings.ENVIRONMENT
-    )
+async def health_check():
+    """Liveness probe returning {"status": "ok"}."""
+    return {"status": "ok"}
 
-# Readiness Probe
-@app.get("/ready", response_model=ReadyResponse, tags=["Status"])
-async def readiness_check() -> ReadyResponse:
-    is_ready = classifier.is_loaded
-    return ReadyResponse(
-        status="ready" if is_ready else "degraded",
-        model_loaded=is_ready,
-        model_version=classifier.version,
-        classifier_ready=is_ready,
-        timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat()
+# Readiness Probe (root path /ready)
+@app.get(
+    "/ready",
+    response_model=ReadyResponse,
+    responses={
+        200: {"description": "ML classifier and required model artifacts are loaded successfully."},
+        503: {"description": "ML classifier or required model artifacts are not loaded."}
+    },
+    tags=["Status"]
+)
+async def readiness_check():
+    """Readiness probe returning 200 only when ML classifier is loaded, otherwise 503."""
+    if classifier.is_loaded:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "ready",
+                "model_loaded": True,
+                "model_version": classifier.version
+            }
+        )
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={
+            "status": "not_ready",
+            "model_loaded": False,
+            "error": "ML classifier or required model artifacts are not loaded."
+        }
     )
 
 # Mount versioned API routes

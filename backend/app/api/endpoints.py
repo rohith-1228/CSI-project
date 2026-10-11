@@ -5,10 +5,12 @@ Houses the primary analysis endpoint and information metadata routes.
 
 import logging
 from fastapi import APIRouter, Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from backend.app.schemas.analysis import (
-    AnalyzeRequest, AnalyzeResponse, ServiceInfoResponse
+    AnalyzeRequest, AnalyzeResponse, ServiceInfoResponse, HealthResponse, ReadyResponse
 )
 from backend.app.services.safety_engine import assess_safety
+from backend.app.ml.classifier import classifier
 from backend.app.core.security import RateLimiter
 from backend.app.core.config import settings
 
@@ -62,6 +64,44 @@ async def analyze_message(payload: AnalyzeRequest, request: Request) -> AnalyzeR
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while analyzing the message. Please try again."
         )
+
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="Health check (API prefix)",
+    description="Liveness probe returning {'status': 'ok'}."
+)
+async def api_health_check() -> HealthResponse:
+    return HealthResponse(status="ok")
+
+@router.get(
+    "/ready",
+    response_model=ReadyResponse,
+    responses={
+        200: {"description": "ML classifier and required model artifacts are loaded successfully."},
+        503: {"description": "ML classifier or required model artifacts are not loaded."}
+    },
+    summary="Readiness check (API prefix)",
+    description="Returns HTTP 200 when ML classifier is operational; otherwise HTTP 503."
+)
+async def api_readiness_check():
+    if classifier.is_loaded:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "ready",
+                "model_loaded": True,
+                "model_version": classifier.version
+            }
+        )
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={
+            "status": "not_ready",
+            "model_loaded": False,
+            "error": "ML classifier or required model artifacts are not loaded."
+        }
+    )
 
 @router.get(
     "/info",

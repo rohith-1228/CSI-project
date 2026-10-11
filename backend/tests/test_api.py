@@ -11,21 +11,60 @@ client = TestClient(app)
 def reset_rate_limit():
     rate_limiter.reset()
 
-def test_health_endpoint():
+def test_health_endpoint_root():
+    """Requirement 3 & 5: GET /health at root path returns {"status": "ok"}."""
     response = client.get("/health")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert "timestamp" in data
-    assert "environment" in data
+    assert response.json() == {"status": "ok"}
 
-def test_ready_endpoint():
+def test_health_endpoint_api_prefix():
+    """GET /api/v1/health also returns {"status": "ok"}."""
+    response = client.get("/api/v1/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+def test_ready_endpoint_success_when_loaded():
+    """Requirement 4: GET /ready returns 200 when ML classifier is loaded."""
+    from backend.app.ml.classifier import classifier
+    classifier.load()
+    assert classifier.is_loaded is True
+
     response = client.get("/ready")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] in ["ready", "degraded"]
-    assert "model_loaded" in data
+    assert data["status"] == "ready"
+    assert data["model_loaded"] is True
     assert "model_version" in data
+
+def test_ready_endpoint_503_when_not_loaded():
+    """Requirement 4: GET /ready returns 503 when ML classifier is not loaded."""
+    from backend.app.ml.classifier import classifier
+    original_loaded = classifier._is_loaded
+    original_pipeline = classifier.pipeline
+
+    try:
+        # Simulate classifier failure to load
+        classifier._is_loaded = False
+        classifier.pipeline = None
+
+        response = client.get("/ready")
+        assert response.status_code == 503
+        data = response.json()
+        assert data["status"] == "not_ready"
+        assert data["model_loaded"] is False
+        assert "error" in data
+    finally:
+        # Restore classifier state
+        classifier._is_loaded = original_loaded
+        classifier.pipeline = original_pipeline
+
+def test_root_advertises_health_and_ready():
+    """Root endpoint / advertises /health and /ready routes."""
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["health"] == "/health"
+    assert data["ready"] == "/ready"
 
 def test_info_endpoint():
     response = client.get("/api/v1/info")

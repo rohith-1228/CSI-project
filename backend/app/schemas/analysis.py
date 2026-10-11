@@ -78,16 +78,12 @@ class AnalyzeResponse(BaseModel):
     disclaimer: str
 
 class HealthResponse(BaseModel):
-    status: str
-    timestamp: str
-    environment: str
+    status: str = "ok"
 
 class ReadyResponse(BaseModel):
     status: str
     model_loaded: bool
-    model_version: str
-    classifier_ready: bool
-    timestamp: str
+    model_version: Optional[str] = None
 
 class ServiceInfoResponse(BaseModel):
     name: str = "CyberSaathi API"
