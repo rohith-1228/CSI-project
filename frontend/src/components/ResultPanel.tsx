@@ -81,30 +81,30 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({ result, onReset }) => 
     <section 
       aria-live="polite"
       id="safety-assessment-result"
-      className={`mt-6 rounded-2xl border-2 ${config.border} ${config.bg} p-6 sm:p-7 shadow-sm transition-all`}
+      className={`mt-5 sm:mt-6 rounded-xl sm:rounded-2xl border-2 ${config.border} ${config.bg} p-4 sm:p-6 md:p-7 shadow-sm transition-all`}
     >
       {/* Top Banner: Verdict & Badges */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-200/80">
-        <div className="flex items-start sm:items-center gap-3.5">
-          <div className={`w-12 h-12 rounded-xl ${config.iconBg} flex items-center justify-center shrink-0 shadow-sm`}>
-            <Icon className="w-6 h-6" aria-hidden="true" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 sm:pb-5 border-b border-slate-200/80">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${config.iconBg} flex items-center justify-center shrink-0 shadow-sm mt-0.5 sm:mt-0`}>
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs uppercase tracking-wider font-semibold text-slate-500">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-500">
                 Safety Assessment
               </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${config.badgeBg}`}>
+              <span className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-bold border ${config.badgeBg}`}>
                 {verdict_label}
               </span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
+              <span className="text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
                 Risk: {risk_level.toUpperCase()}
               </span>
             </div>
-            <h2 className={`text-xl sm:text-2xl font-bold mt-1 ${config.accentColor}`}>
+            <h2 className={`text-lg sm:text-2xl font-bold mt-1 leading-snug sm:leading-tight ${config.accentColor}`}>
               {config.headline}
             </h2>
-            <p className="text-sm text-slate-600 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
               {config.subline}
             </p>
           </div>
@@ -112,32 +112,34 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({ result, onReset }) => 
 
         {/* Real Grounded Confidence Score Display */}
         {confidencePercent !== null && (
-          <div className="sm:text-right bg-white/80 sm:bg-transparent p-3 sm:p-0 rounded-lg border border-slate-200 sm:border-0">
-            <span className="block text-xs font-medium text-slate-500">
-              {verdict === 'likely_safe' ? 'Safety Confidence' : 'Detection Probability'}
-            </span>
-            <div className="flex items-baseline sm:justify-end gap-1">
-              <span className="text-2xl font-black text-slate-900">{confidencePercent}%</span>
-              <span className="text-xs text-slate-500">calibrated</span>
+          <div className="flex items-center justify-between sm:block bg-white/90 sm:bg-transparent p-3 sm:p-0 rounded-xl border border-slate-200/80 sm:border-0 shadow-xs sm:shadow-none sm:text-right shrink-0">
+            <div>
+              <span className="block text-xs font-medium text-slate-500">
+                {verdict === 'likely_safe' ? 'Safety Confidence' : 'Detection Probability'}
+              </span>
+              <span className="text-[11px] text-slate-500 hidden sm:block">
+                {verdict === 'likely_safe' 
+                  ? 'Based on evaluated threat absence' 
+                  : 'Based on matched attack patterns'}
+              </span>
             </div>
-            <span className="text-[11px] text-slate-500 block">
-              {verdict === 'likely_safe' 
-                ? 'Based on evaluated threat absence' 
-                : 'Based on matched attack patterns'}
-            </span>
+            <div className="flex items-baseline sm:justify-end gap-1 shrink-0">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{confidencePercent}%</span>
+              <span className="text-[11px] text-slate-500 font-medium">calibrated</span>
+            </div>
           </div>
         )}
       </div>
 
       {/* Grounded Reasons List */}
-      <div className="mt-5">
-        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-          <Info className="w-4 h-4 text-slate-500" aria-hidden="true" />
-          Why did CyberSaathi give this verdict?
+      <div className="mt-4 sm:mt-5">
+        <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+          <Info className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
+          <span>Why did CyberSaathi give this verdict?</span>
         </h3>
         <ul className="mt-2.5 space-y-2">
           {reasons.map((reason, idx) => (
-            <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-800 leading-relaxed bg-white/90 p-3 rounded-lg border border-slate-200/80">
+            <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-800 leading-relaxed bg-white/90 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200/80">
               {verdict === 'likely_scam' ? (
                 <ShieldAlert className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" aria-hidden="true" />
               ) : verdict === 'suspicious' ? (
@@ -155,17 +157,17 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({ result, onReset }) => 
 
       {/* URL Findings summary if URLs were present */}
       {analyzed_features.urls_found.length > 0 && (
-        <div className="mt-4 p-3.5 bg-white/90 rounded-lg border border-slate-200">
+        <div className="mt-4 p-3 sm:p-3.5 bg-white/90 rounded-lg sm:rounded-xl border border-slate-200">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
-            <ExternalLink className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
-            Analyzed Web Links ({analyzed_features.urls_found.length})
+            <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
+            <span>Analyzed Web Links ({analyzed_features.urls_found.length})</span>
           </h4>
           <div className="space-y-1.5">
             {analyzed_features.url_details.map((u, i) => (
-              <div key={i} className="text-xs text-slate-700 bg-slate-50 p-2 rounded border border-slate-100">
-                <span className="font-mono text-slate-800 break-all">{u.url}</span>
+              <div key={i} className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <span className="font-mono text-slate-800 break-all select-all block">{u.url}</span>
                 {u.risk_summary.length > 0 && (
-                  <ul className="mt-1 list-disc list-inside text-rose-700 space-y-0.5">
+                  <ul className="mt-1.5 list-disc list-inside text-rose-700 space-y-0.5">
                     {u.risk_summary.map((finding, fi) => (
                       <li key={fi}>{finding}</li>
                     ))}
@@ -178,16 +180,16 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({ result, onReset }) => 
       )}
 
       {/* Actionable Next Step Box */}
-      <div className="mt-5 p-4 rounded-xl bg-slate-900 text-white">
+      <div className="mt-4 sm:mt-5 p-3.5 sm:p-4 rounded-xl bg-slate-900 text-white">
         <div className="flex items-start gap-3">
           <div className="p-1 rounded bg-slate-800 text-teal-400 shrink-0 mt-0.5">
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-teal-300 uppercase tracking-wide">
+            <h4 className="text-xs sm:text-sm font-bold text-teal-300 uppercase tracking-wide">
               What Should You Do Next?
             </h4>
-            <p className="mt-1 text-sm text-slate-100 leading-relaxed font-medium">
+            <p className="mt-1 text-xs sm:text-sm text-slate-100 leading-relaxed font-medium">
               {recommended_action}
             </p>
           </div>
@@ -195,15 +197,15 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({ result, onReset }) => 
       </div>
 
       {/* Reset & Check Another Message Button */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200">
-        <p className="text-xs text-slate-500 leading-normal max-w-lg">
+      <div className="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4 border-t border-slate-200">
+        <p className="text-[11px] sm:text-xs text-slate-500 leading-normal max-w-lg text-center sm:text-left">
           {disclaimer}
         </p>
 
         <button
           type="button"
           onClick={onReset}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white hover:bg-slate-100 text-slate-800 text-sm font-semibold border border-slate-300 shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-slate-800"
+          className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-300 shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-slate-800 touch-manipulation cursor-pointer shrink-0"
         >
           <RotateCcw className="w-4 h-4 text-slate-600" aria-hidden="true" />
           <span>Check Another Message</span>

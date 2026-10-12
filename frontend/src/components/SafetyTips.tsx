@@ -37,32 +37,32 @@ export const SafetyTips: React.FC = () => {
   ];
 
   return (
-    <section id="safety-tips" className="max-w-3xl mx-auto px-4 py-12 border-t border-slate-200" aria-labelledby="safety-tips-title">
-      <div className="text-center mb-8">
-        <h2 id="safety-tips-title" className="text-2xl font-bold text-slate-900 tracking-tight">
+    <section id="safety-tips" className="max-w-3xl mx-auto px-3.5 sm:px-6 py-8 sm:py-12 border-t border-slate-200" aria-labelledby="safety-tips-title">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 id="safety-tips-title" className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
           Practical Cyber Safety Tips
         </h2>
-        <p className="text-sm text-slate-600 mt-1">
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">
           Simple golden rules to protect you and your family from modern online fraud.
         </p>
       </div>
 
-      <div className="space-y-3.5">
+      <div className="space-y-3 sm:space-y-3.5">
         {tips.map((tip, idx) => {
           const { Icon } = tip;
           return (
             <div 
               key={idx}
-              className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-sm flex items-start gap-4"
+              className="bg-white rounded-xl p-3.5 sm:p-5 border border-slate-200 shadow-sm flex items-start gap-3 sm:gap-4 transition-all hover:border-slate-300"
             >
-              <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon className="w-5 h-5 text-brand-800" aria-hidden="true" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-brand-800" aria-hidden="true" />
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
                   {tip.title}
                 </h3>
-                <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {tip.detail}
                 </p>
               </div>
